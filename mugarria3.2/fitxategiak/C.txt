@@ -1,0 +1,1 @@
+C es un lenguaje de programación de bajo nivel, diseñado para ser altamente eficiente y para permitir un control preciso sobre el hardware de la computadora. Se utiliza en una variedad de aplicaciones, incluyendo sistemas operativos, bases de datos y controladores de dispositivos.
