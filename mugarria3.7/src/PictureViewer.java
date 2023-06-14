@@ -7,8 +7,13 @@ import java.awt.*;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 import dbconnection.*;
@@ -16,18 +21,46 @@ import dbconnection.*;
 public class PictureViewer extends JFrame {
 
     private JComboBox<String> comboBox;
-
     private JXDatePicker datePicker;
     private JLabel imageLabel;
     private JList imageList;
     private ImageIcon imagePicture;
     List<Fotos> images;
+    private JButton btnAward;
+    private JButton btnRemove;
 
     public PictureViewer() {
         setTitle("Argazkiak");
         setSize(800, 400);
-        setLayout(new GridLayout(2, 2));
+        setLayout(new GridLayout(3, 3));
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        //Awarded botoia
+        JPanel awardedButton = new JPanel();
+        this.btnAward = new JButton("Awarded");
+        awardedButton.add(this.btnAward);
+        add(awardedButton);
+        this.btnAward.addActionListener(e -> {
+            try {
+                updateAwardPhotographers();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+
+        //Remove botoia
+        JPanel removeButton = new JPanel();
+        this.btnRemove = new JButton("Remove");
+        this.btnRemove.setSize(200, 150);
+        removeButton.add(this.btnRemove);
+        add(removeButton);
+        this.btnRemove.addActionListener(e -> {
+            try {
+                removedNonAwardPictures();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
 
         //Argazkilariekin dauden combobox panela
         JPanel comboboxPanela = new JPanel();
@@ -109,6 +142,37 @@ public class PictureViewer extends JFrame {
         this.imagePicture = new ImageIcon("src/Fotos/"+imagePath);
         this.imageLabel.setIcon(this.imagePicture);
     }
+
+    private void updateAwardPhotographers() throws SQLException {
+        DBCrud c = new DBCrud(DBconnection.getConnection());
+        Integer nvisit = Integer.valueOf(JOptionPane.showInputDialog("Sartu saritzeko zenbaki minimoa"));
+        for (Map.Entry<Integer,Integer> entry : c.createVisitMap().entrySet()){
+            if (entry.getValue() >= nvisit){
+                c.updateAwarded(entry.getKey());
+                JOptionPane.showMessageDialog(null,"Sariak errenkada eguneratu da");
+            }else {
+                JOptionPane.showMessageDialog(null,"Sariak errenkada ezin da eguneratu");
+            }
+        }
+
+    }
+
+    private void removedNonAwardPictures() throws SQLException {
+        DBCrud c = new DBCrud(DBconnection.getConnection());
+        List<Integer> picturesList;
+        picturesList = c.getNonPhotos();
+        for (Integer i : picturesList){
+                int aukera = JOptionPane.showConfirmDialog(null, "¿Irudia ezabatu nahi duzu?", "Ezabatu",
+                        JOptionPane.YES_NO_OPTION);
+                if (aukera == 0){
+                    c.ezabatuIrudia(i);
+                }
+
+        }
+    }
+
+
+
     public static void main(String[] args) {
         new PictureViewer();
 
